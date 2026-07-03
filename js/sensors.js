@@ -3,7 +3,14 @@
 
 export async function startCamera(videoEl) {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: { ideal: "environment" } },
+    video: {
+      facingMode: { ideal: "environment" },
+      // Portrait HD (taller than wide) to match a phone held upright. "ideal"
+      // degrades gracefully to the nearest supported mode. object-fit: cover on
+      // the <video> handles any leftover aspect mismatch regardless.
+      width: { ideal: 1080 },
+      height: { ideal: 1920 },
+    },
     audio: false,
   });
   videoEl.srcObject = stream;

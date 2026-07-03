@@ -8,7 +8,7 @@ import { Overlay, metaLine } from "./overlay.js";
 const $ = (id) => document.getElementById(id);
 
 // Bump on every deploy so we can confirm the device is running fresh code.
-const VERSION = "v0.1.8";
+const VERSION = "v0.1.9";
 
 // Population slider steps map to thresholds.
 const POP_STEPS = [0, 1000, 5000, 15000, 50000, 100000, 500000];
@@ -37,9 +37,34 @@ function status(msg) {
 
 // ---- Sensor callbacks -----------------------------------------------------
 
+// Low-pass smoothing factor (0..1): higher = snappier but noisier.
+const SMOOTH = 0.2;
+
+// Shortest-path interpolation for a wrapping angle (degrees).
+function circularLerp(a, b, t) {
+  if (b == null || Number.isNaN(b)) return a;
+  if (a == null) return b;
+  const diff = ((((b - a) % 360) + 540) % 360) - 180; // signed shortest delta
+  return (a + diff * t + 360) % 360;
+}
+
+function lerp(a, b, t) {
+  if (b == null || Number.isNaN(b)) return a;
+  if (a == null) return b;
+  return a + (b - a) * t;
+}
+
 function onOrientation(o) {
-  state.orient = o;
   state.orientEvents = (state.orientEvents || 0) + 1;
+  const p = state.orient;
+  // Smooth the raw compass to kill magnetometer jitter. alpha wraps at 360 so it
+  // needs circular interpolation; beta/gamma are well inside their ranges here.
+  state.orient = {
+    alpha: circularLerp(p.alpha, o.alpha, SMOOTH),
+    beta: lerp(p.beta, o.beta, SMOOTH),
+    gamma: lerp(p.gamma, o.gamma, SMOOTH),
+    source: o.source,
+  };
 }
 
 function onPosition(p) {
