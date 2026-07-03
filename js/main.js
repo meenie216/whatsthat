@@ -7,6 +7,9 @@ import { Overlay, metaLine } from "./overlay.js";
 
 const $ = (id) => document.getElementById(id);
 
+// Bump on every deploy so we can confirm the device is running fresh code.
+const VERSION = "v0.1.8";
+
 // Population slider steps map to thresholds.
 const POP_STEPS = [0, 1000, 5000, 15000, 50000, 100000, 500000];
 
@@ -187,6 +190,9 @@ async function start() {
     status("Data load failed: " + e.message);
   }
 }
+
+$("version").textContent = VERSION;
+console.log(`WhatsThat ${VERSION} booted`);
 
 $("startBtn").addEventListener("click", start);
 
