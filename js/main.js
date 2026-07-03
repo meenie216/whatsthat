@@ -190,7 +190,15 @@ async function start() {
 
 $("startBtn").addEventListener("click", start);
 
-// Register service worker for offline / installability (optional, ignore failure).
+// Service worker DISABLED during active debugging: cache-first workers (esp. on
+// iOS Safari) serve stale code and mask fixes. Actively unregister any previously
+// installed worker and clear its caches so the device always fetches fresh files.
+// Re-enable offline support once the app is working.
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((regs) => regs.forEach((r) => r.unregister()));
+}
+if (window.caches) {
+  caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
 }
