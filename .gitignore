@@ -1,0 +1,10 @@
+# Generated full dataset (build with scripts/build_data.sh). The small
+# sample dataset IS committed so the app works out of the box.
+data/pois.json
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

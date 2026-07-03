@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>WhatsThat — point &amp; identify</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Live camera feed sits behind everything -->
+  <video id="camera" autoplay playsinline muted></video>
+
+  <!-- AR labels get positioned into this layer -->
+  <div id="overlay"></div>
+
+  <!-- Centre reticle -->
+  <div id="reticle"></div>
+
+  <!-- Start gate: browsers require a user gesture before camera / sensors -->
+  <div id="gate">
+    <div class="gate-card">
+      <h1>WhatsThat</h1>
+      <p>Point your phone at the horizon to see what's out there — cities, towns, landmarks and peaks, drawn where they actually are.</p>
+      <button id="startBtn">Start</button>
+      <p class="hint">Needs camera, location &amp; motion access. Best held upright in portrait.</p>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div id="controls" hidden>
+    <label class="ctl">
+      <span>Range: <output id="rangeOut">150</output> km</span>
+      <input id="rangeSlider" type="range" min="5" max="500" value="150" step="5" />
+    </label>
+    <label class="ctl">
+      <span>Min population: <output id="popOut">1,000</output></span>
+      <input id="popSlider" type="range" min="0" max="6" value="0" step="1" />
+    </label>
+    <div class="ctl row">
+      <label class="switch">
+        <input id="firstHit" type="checkbox" />
+        <span>Nearest hit only</span>
+      </label>
+      <button id="menuBtn" class="ghost">⚙</button>
+    </div>
+  </div>
+
+  <!-- Debug / calibration panel -->
+  <div id="debug" hidden>
+    <div class="dbg-row"><span>heading</span><b id="dbgHeading">–</b></div>
+    <div class="dbg-row"><span>pitch</span><b id="dbgPitch">–</b></div>
+    <div class="dbg-row"><span>roll</span><b id="dbgRoll">–</b></div>
+    <div class="dbg-row"><span>lat,lon</span><b id="dbgPos">–</b></div>
+    <div class="dbg-row"><span>GPS ±</span><b id="dbgAcc">–</b></div>
+    <div class="dbg-row"><span>POIs in view</span><b id="dbgCount">–</b></div>
+    <div class="dbg-row src"><span>heading source</span><b id="dbgSource">–</b></div>
+    <label class="ctl">
+      <span>Calibrate heading: <output id="calOut">0</output>°</span>
+      <input id="calSlider" type="range" min="-30" max="30" value="0" step="1" />
+    </label>
+    <label class="ctl">
+      <span>Camera FOV: <output id="fovOut">63</output>°</span>
+      <input id="fovSlider" type="range" min="40" max="90" value="63" step="1" />
+    </label>
+  </div>
+
+  <div id="status"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
