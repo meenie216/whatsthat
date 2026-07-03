@@ -36,6 +36,7 @@ function status(msg) {
 
 function onOrientation(o) {
   state.orient = o;
+  state.orientEvents = (state.orientEvents || 0) + 1;
 }
 
 function onPosition(p) {
@@ -101,6 +102,14 @@ function frame() {
   $("dbgRoll").textContent = `${hpr.roll.toFixed(0)}°`;
   $("dbgCount").textContent = String(visible.length);
   $("dbgSource").textContent = state.orient.source;
+
+  const v = $("camera");
+  $("dbgCam").textContent = state.camError
+    ? state.camError
+    : v.videoWidth
+    ? `${v.videoWidth}×${v.videoHeight}`
+    : "no frame yet";
+  $("dbgEvents").textContent = String(state.orientEvents || 0);
 }
 
 // ---- Controls -------------------------------------------------------------
@@ -141,17 +150,25 @@ function wireControls() {
 
 async function start() {
   $("startBtn").disabled = true;
-  try {
-    await startCamera($("camera"));
-  } catch (e) {
-    status("Camera unavailable: " + e.message);
-  }
+  $("debug").hidden = false; // show diagnostics while we get this working
+
+  // iOS requires DeviceOrientationEvent.requestPermission() to run while the tap's
+  // user activation is still live. Awaiting the camera prompt first consumes that
+  // activation and the motion request silently fails — so request motion FIRST.
   try {
     await requestOrientationPermission();
-    startOrientation(onOrientation);
   } catch (e) {
     status("Motion access denied — compass won't work");
   }
+  startOrientation(onOrientation);
+
+  try {
+    state.cam = await startCamera($("camera"));
+  } catch (e) {
+    state.camError = `${e.name}: ${e.message}`;
+    status("Camera failed: " + state.camError);
+  }
+
   startGeolocation(onPosition, (err) => status("Location: " + err.message));
 
   try {

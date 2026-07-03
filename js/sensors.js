@@ -7,8 +7,16 @@ export async function startCamera(videoEl) {
     audio: false,
   });
   videoEl.srcObject = stream;
-  await videoEl.play();
-  return stream;
+  videoEl.setAttribute("playsinline", "");
+  videoEl.muted = true;
+  // play() can reject under autoplay policies even when the stream is fine;
+  // don't let that abort startup — the frame may still render.
+  try {
+    await videoEl.play();
+  } catch (_) {}
+  const track = stream.getVideoTracks()[0];
+  const s = track && track.getSettings ? track.getSettings() : {};
+  return { stream, label: track ? track.label : "", width: s.width, height: s.height };
 }
 
 // iOS requires an explicit permission request for motion/orientation.
