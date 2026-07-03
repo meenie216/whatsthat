@@ -58,8 +58,6 @@ function recomputeWorking() {
 
 function frame() {
   requestAnimationFrame(frame);
-  if (!state.observer) return;
-  if (state.dirty) recomputeWorking();
 
   const w = window.innerWidth;
   const h = window.innerHeight;
@@ -67,6 +65,23 @@ function frame() {
   // Apply manual calibration to alpha (rotates heading).
   const o = { ...state.orient, alpha: (state.orient.alpha || 0) + state.calibration };
   const basis = cameraBasis(o, state.screenDeg);
+
+  // Diagnostics update every frame, even before we have a GPS fix.
+  const hpr = basisToHPR(basis);
+  $("dbgHeading").textContent = `${hpr.heading.toFixed(0)}°`;
+  $("dbgPitch").textContent = `${hpr.pitch.toFixed(0)}°`;
+  $("dbgRoll").textContent = `${hpr.roll.toFixed(0)}°`;
+  $("dbgSource").textContent = state.orient.source;
+  $("dbgEvents").textContent = String(state.orientEvents || 0);
+  const cam = $("camera");
+  $("dbgCam").textContent = state.camError
+    ? state.camError
+    : cam.videoWidth
+    ? `${cam.videoWidth}×${cam.videoHeight}`
+    : "no frame yet";
+
+  if (!state.observer) return;
+  if (state.dirty) recomputeWorking();
 
   const visible = [];
   for (const entry of state.working) {
@@ -95,21 +110,7 @@ function frame() {
     }))
   );
 
-  // Debug HUD
-  const hpr = basisToHPR(basis);
-  $("dbgHeading").textContent = `${hpr.heading.toFixed(0)}°`;
-  $("dbgPitch").textContent = `${hpr.pitch.toFixed(0)}°`;
-  $("dbgRoll").textContent = `${hpr.roll.toFixed(0)}°`;
   $("dbgCount").textContent = String(visible.length);
-  $("dbgSource").textContent = state.orient.source;
-
-  const v = $("camera");
-  $("dbgCam").textContent = state.camError
-    ? state.camError
-    : v.videoWidth
-    ? `${v.videoWidth}×${v.videoHeight}`
-    : "no frame yet";
-  $("dbgEvents").textContent = String(state.orientEvents || 0);
 }
 
 // ---- Controls -------------------------------------------------------------
@@ -150,7 +151,15 @@ function wireControls() {
 
 async function start() {
   $("startBtn").disabled = true;
+
+  // Reveal the app and start the render loop FIRST. iOS won't play a <video>
+  // that's covered by an opaque layer, so awaiting play() while the gate is still
+  // up deadlocks: play() never settles, so the gate never hides. Uncover first.
+  $("gate").hidden = true;
+  $("controls").hidden = false;
   $("debug").hidden = false; // show diagnostics while we get this working
+  wireControls();
+  requestAnimationFrame(frame);
 
   // iOS requires DeviceOrientationEvent.requestPermission() to run while the tap's
   // user activation is still live. Awaiting the camera prompt first consumes that
@@ -177,11 +186,6 @@ async function start() {
   } catch (e) {
     status("Data load failed: " + e.message);
   }
-
-  $("gate").hidden = true;
-  $("controls").hidden = false;
-  wireControls();
-  requestAnimationFrame(frame);
 }
 
 $("startBtn").addEventListener("click", start);
