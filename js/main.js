@@ -8,7 +8,7 @@ import { Overlay, metaLine } from "./overlay.js";
 const $ = (id) => document.getElementById(id);
 
 // Bump on every deploy so we can confirm the device is running fresh code.
-const VERSION = "v0.1.9";
+const VERSION = "v0.1.10";
 
 // Population slider steps map to thresholds.
 const POP_STEPS = [0, 1000, 5000, 15000, 50000, 100000, 500000];
@@ -56,6 +56,7 @@ function lerp(a, b, t) {
 
 function onOrientation(o) {
   state.orientEvents = (state.orientEvents || 0) + 1;
+  state.compassAccuracy = o.compassAccuracy;
   const p = state.orient;
   // Smooth the raw compass to kill magnetometer jitter. alpha wraps at 360 so it
   // needs circular interpolation; beta/gamma are well inside their ranges here.
@@ -101,6 +102,9 @@ function frame() {
   $("dbgRoll").textContent = `${hpr.roll.toFixed(0)}°`;
   $("dbgSource").textContent = state.orient.source;
   $("dbgEvents").textContent = String(state.orientEvents || 0);
+  const ca = state.compassAccuracy;
+  $("dbgCompass").textContent =
+    ca == null ? "n/a" : ca < 0 ? "UNRELIABLE" : `±${ca.toFixed(0)}°`;
   const cam = $("camera");
   $("dbgCam").textContent = state.camError
     ? state.camError

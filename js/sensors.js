@@ -52,7 +52,15 @@ export function startOrientation(cb) {
       source = "absolute";
     }
 
-    cb({ alpha, beta: e.beta, gamma: e.gamma, source });
+    cb({
+      alpha,
+      beta: e.beta,
+      gamma: e.gamma,
+      source,
+      // iOS only: max heading deviation in degrees; -1 = unreliable/needs calibration.
+      compassAccuracy:
+        typeof e.webkitCompassAccuracy === "number" ? e.webkitCompassAccuracy : null,
+    });
   }
 
   // deviceorientationabsolute is more reliable on Android where available.
